@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en" ng-app>
+  <head>
+    <title>Wilderland Client</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="/css/client.css">
+    
+    <script type="text/template" id="Wilderland-MainView-template">
+      <p>Status: <span data-role="connectionStatusSpan">Unknown</span></p>
+      <div data-role="messagesDiv"></div>
+      <div data-role="commandInputDiv">
+        &gt; <span data-role="input"></span><span class="blinking-cursor">_</span>
+      </div>
+    </script>
+    
+    <script type="text/template" id="Wilderland-Sector-template">
+      <div class="sector">
+        Sector: <span class="sectorId"><%= sector.id %></span><br>
+        <% if( sector.ports.length>0 ) { %>
+        <% $.each(sector.ports, function(index, port) { %>
+        Port: <%= port.name %><br>
+        <% }); %>
+        <% } %>
+        Warps to sector(s): <ul class="warpList">
+        <% $.each(sector.warps, function(index, warp) { %>
+          <li class="warp"><%= warp %></li>
+        <% }); %></ul></br>
+      </div>
+    </script>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/jquery.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
+    <script src="/js/underscore-min.js"></script>
+    <script src="/js/backbone-min.js"></script>
+    
+    <script src="/js/Wilderland/Client.js"></script>
+    <script src="/js/Wilderland/Client/CommandInterpreters/CommandInterpreter.js"></script>
+    <script src="/js/Wilderland/Client/CommandInterpreters/InSpaceInterpreter.js"></script>
+    <script src="/js/Wilderland/Client/Router.js"></script>
+    <script src="/js/Wilderland/Client/Views/MainView.js"></script>
+    
+    <script>
+      $(document).ready(function() {
+        Wilderland.Client.start();
+      });
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

@@ -1,0 +1,98 @@
+div[data-role=messagesDiv] {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 20px;
+    bottom: 50px;
+    padding: 10px;
+    overflow: auto;
+}
+
+div[data-role=commandInputDiv] {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 30px;
+    padding: 10px;
+}
+
+.blinking-cursor {
+  font-weight: 100;
+  font-size: 20px;
+  color: #2E3D48;
+  -webkit-animation: 1s blink step-end infinite;
+  -moz-animation: 1s blink step-end infinite;
+  -ms-animation: 1s blink step-end infinite;
+  -o-animation: 1s blink step-end infinite;
+  animation: 1s blink step-end infinite;
+}
+
+@keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-moz-keyframes blink {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-webkit-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-ms-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+@-o-keyframes "blink" {
+  from, to {
+    color: transparent;
+  }
+  50% {
+    color: black;
+  }
+}
+
+.sector {}
+.sectorId {}
+.warpList {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: inline;
+}
+.warp {
+  display: inline;
+}
+.warp:first-child:before {
+  content: "";
+}
+.warp:before {
+  content: "-";
+  padding-left: 5px;
+  padding-right: 5px
+}
+.message {
+  padding: 0px;
+  padding-bottom: 20px;
+}
