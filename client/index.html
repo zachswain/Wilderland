@@ -30,6 +30,49 @@
       </div>
     </script>
     
+    <script type="text/template" id="Wilderland-Port-template">
+      <div class="port">
+        Commerce report for <%= port.name %>: 
+        
+        <table>
+          <thead>
+            <tr>
+              <th>Items</th>
+              <th>Status</th>
+              <th>Trading</th>
+              <th>% of Max</th>
+              <th>Onboard</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Fuel Ore</td>
+              <td><%= port.isBuyingFuelOre() ? "Buying" : "Selling" %></td>
+              <td><%= port.getFuelOre().current %></td>
+              <td>--</td>
+              <td>--</td>
+            </tr>
+            <tr>
+              <td>Organics</td>
+              <td><%= port.isBuyingOrganics() ? "Buying" : "Selling" %></td>
+              <td><%= port.getOrganics().current %></td>
+              <td>--</td>
+              <td>--</td>
+            </tr>
+            <tr>
+              <td>Equipment</td>
+              <td><%= port.isBuyingEquipment() ? "Buying" : "Selling" %></td>
+              <td><%= port.getEquipment().current %></td>
+              <td>--</td>
+              <td>--</td>
+            </tr>
+          </tbody>
+        </table>
+        
+        You have <%= player.getCredits() %> credits and <%= player.getEmptyCargoHolds() %> empty holds.
+      </div>
+    </script>
+    
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/jquery.min.js"></script>
     <script src="/js/bootstrap.min.js"></script>
@@ -40,7 +83,11 @@
     <script src="/js/Wilderland/Client/CommandInterpreters/CommandInterpreter.js"></script>
     <script src="/js/Wilderland/Client/CommandInterpreters/InSpaceInterpreter.js"></script>
     <script src="/js/Wilderland/Client/Router.js"></script>
+    <script src="/js/Wilderland/Client/GameState.js"></script>
     <script src="/js/Wilderland/Client/Views/MainView.js"></script>
+    <script src="/js/Wilderland/Client/Entities/Player.js"></script>
+    <script src="/js/Wilderland/Client/Entities/Sector.js"></script>
+    <script src="/js/Wilderland/Client/Entities/Port.js"></script>
     
     <script>
       $(document).ready(function() {

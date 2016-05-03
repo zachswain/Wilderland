@@ -48,6 +48,7 @@ io.on('connection', function (socket) {
   // Load player
   var player = new Player();
   player.initialize();
+  player.setCredits(100);
   player.location = {
       type : Type.SECTOR,
       id : 1

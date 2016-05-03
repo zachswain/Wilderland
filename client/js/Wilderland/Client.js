@@ -8,7 +8,9 @@
                     this.router.start();
                     
                     this.player = null;
-                    this.sector = null;
+                    this.currentLocation = null;
+                    
+                    this.currentState = Wilderland.Client.GameState.NO_STATE;
                     
                     this.currentCommand = null;
                     this.commandQueue = new Backbone.Model({
@@ -42,6 +44,8 @@
                     });
                     
                     this.socket.on("player", function(data) {
+                        self.player = new Wilderland.Client.Entities.Player(data);
+                        console.log(data);
                         self.trigger("event_player", data);
                     });
                     
@@ -72,23 +76,37 @@
                 },
                 
                 onStateChange : function(data) {
-                    console.log(data);
+                    this.currentState = data.newState;
+                    
                     if( data.newState == "entering_sector" ) {
                         this.sector = data.sector;
                     }
                     
                     if( data.newState == "moving" ) {
-                        
+                        this.trigger("event_message", "You fire up your engines and head for the warp lane.");
                     }
                     
-                    if( data.oldState == "entering_sector" && data.newState == "in_space") {
-                        this.displaySector();
+                    if( data.newState == "entering_sector" ) {
+                        this.sector = new Wilderland.Client.Entities.Sector(data.sector);
+                        this.displaySector(this.sector);
+                    }
+                    
+                    if( data.newState == "entering_port" ) {
+                        this.currentLocation = new Wilderland.Client.Entities.Port(data.port);
+                        this.displayPort(this.currentLocation);
                     }
                 },
                 
-                displaySector : function() {
+                displaySector : function(sector) {
                     var template = _.template( $("#Wilderland-Sector-template").html() );
-                    var msg = template({ sector : this.sector });
+                    var msg = template({ player : this.player, sector : sector });
+                    this.trigger("event_message", msg);
+                },
+                
+                displayPort : function(port) {
+                    console.log(port);
+                    var template = _.template( $("#Wilderland-Port-template").html() );
+                    var msg = template({ player : this.player, port : port });
                     this.trigger("event_message", msg);
                 },
                 
@@ -102,6 +120,26 @@
                         return null;
                     }
                     
+                    if( this.currentState == Wilderland.Client.GameState.IN_SPACE ) {
+                        this.processInSpaceCommands(input, tokens);
+                    } else if( this.currentState == Wilderland.Client.GameState.IN_PORT ) {
+                        this.processInPortCommands(input, tokens);
+                    }
+                },
+                
+                processInPortCommands : function(input, tokens) {
+                    // Input: <l|leave|launch>
+                    // Launch/Leave from port
+                    if( tokens.length>0 && 
+                        (tokens[0].toLowerCase()=="l" || tokens[0].toLowerCase()=="leave")
+                    ) {
+                        this.queueCommand({
+                            command : "launch"
+                        });
+                    }
+                },
+                
+                processInSpaceCommands : function(input, tokens) {
                     // Input: <int>
                     // Move
                     if( tokens.length==1 && parseInt(tokens[0])==tokens[0] ) {

@@ -11,7 +11,6 @@ var Sector = function() {
         var sector = JSON.parse(JSON.stringify(this));
         
         for( var i=0 ; i<sector.ports.length ; i++ ) {
-            console.log("loading port " + sector.ports[i]);
             sector.ports[i] = client.universe.getPort(sector.ports[i]).buildForClient(client);
         }
         

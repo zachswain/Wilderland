@@ -79,8 +79,15 @@ function onPort(data) {
                     this.client.setState(GameState.ENTERING_PORT, {
                         "port" : port.buildForClient()   
                     });
+                    
+                    this.client.player.setLocation({
+                        type : Type.PORT,
+                        id : port.getId()
+                    })
+                    
                     this.client.setState(GameState.IN_PORT, {
-                        "port" : port.buildForClient()
+                        "port" : port.buildForClient(),
+                        "player" : this.client.player.buildForClient(this.client)
                     });
                     
                     this.client.socket.emit("command_success", {
