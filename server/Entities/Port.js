@@ -49,22 +49,20 @@ var Port = function() {
     }
     
     this.isBuyingEquipment = function() {
-        console.log(this.class);
         var buying = (this.class & (1<<2)) > 0;
-        console.log(buying);
         return buying;
     }
     
     this.getFuelOre = function() {
-        this.inventory.FuelOre;
+        return this.inventory.FuelOre;
     }
     
     this.getOrganics = function() {
-        this.inventory.Organics;
+        return this.inventory.Organics;
     }
     
     this.getEquipment = function() {
-        this.inventory.Equipment;
+        return this.inventory.Equipment;
     }
 }
 

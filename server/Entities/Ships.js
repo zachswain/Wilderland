@@ -11,7 +11,12 @@ var Ships = {
     MerchantCruiser  : function() {
         this.type = "Merchant Cruiser";
         Ship.call(this, {
-            holds : 30
+            holds : 30,
+            cargo : {
+                FuelOre : 5,
+                Organics : 5,
+                Equipment : 5
+            }
         });
     }
 };

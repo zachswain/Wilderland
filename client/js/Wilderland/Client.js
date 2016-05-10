@@ -19,6 +19,12 @@
                     });
                     this.listenTo(this.commandQueue, "enqueue", this.onCommandQueued, this);
                     
+                    this.defaultInput = null;
+                    this.inputQueue = new Backbone.Model({
+                        inputs : []
+                    });
+                    this.listenTo(this.inputQueue, "enqueue", this.onInputQueued, this);
+                    
                     this.listenTo(this, "event_state_change", this.onStateChange, this);
                     this.listenTo(this, "user_input_received", this.onUserInputReceived, this);
                     this.listenTo(this, "event_command_success", this.onCommandSuccess, this);
@@ -89,11 +95,61 @@
                     if( data.newState == "entering_sector" ) {
                         this.sector = new Wilderland.Client.Entities.Sector(data.sector);
                         this.displaySector(this.sector);
+                        this.processNextCommand();
                     }
                     
                     if( data.newState == "entering_port" ) {
                         this.currentLocation = new Wilderland.Client.Entities.Port(data.port);
                         this.displayPort(this.currentLocation);
+                    }
+                    
+                    if( data.newState == Wilderland.Client.GameState.IN_PORT ) {
+                        this.inPort(data);
+                    }
+                },
+                
+                inPort : function(data) {
+                    console.log("processing in port");
+                  
+                    this.sellingOre(data);  
+                },
+                
+                sellingOre : function(data) {
+                    var self = this;
+                    console.log("selling ore");
+                    console.log(data);
+                    var defaultAmount = (data.player.ship.cargo.FuelOre < data.port.inventory.FuelOre.current) ? data.player.ship.cargo.FuelOre : data.port.inventory.FuelOre.current;
+                    
+                    this.displayMessage("How much Fuel Ore do you want to sell? [" + defaultAmount + "]");
+                    
+                    this.onInput(function(input) {
+                        var amount;
+                        if( input=="" ) {
+                            amount = defaultAmount;
+                        } else {
+                            amount = parseInt(input);
+                        }
+                        
+                        if( amount==0 ) {
+                            self.sellingOrganics();
+                        } else if( amount<=defaultAmount ) {
+                            self.displayMessage("Great, " + amount + " ore it is.");
+                        } else {
+                            self.displayMessage("Didn't quite catch that.");
+                            self.sellingOre(data);
+                        }
+                    });
+                },
+                
+                onInput : function(fn) {
+                    if( this.inputQueue.get("inputs").length>0 ) {
+                        var input = this.inputQueue.get("inputs").splice(0,1)[0].trim();
+                        fn(input);
+                    } else {
+                        this.listenToOnce(this.inputQueue, "enqueue", function() {
+                            var input = this.inputQueue.get("inputs").splice(0,1)[0].trim();
+                            fn(input);
+                        }, this);
                     }
                 },
                 
@@ -106,6 +162,7 @@
                 displayPort : function(port) {
                     console.log(port);
                     var template = _.template( $("#Wilderland-Port-template").html() );
+                    console.log(this.player);
                     var msg = template({ player : this.player, port : port });
                     this.trigger("event_message", msg);
                 },
@@ -113,33 +170,34 @@
                 onUserInputReceived : function(event) {
                     console.log("Wilderland.Client: " + event.input);
                     
-                    var input = event.input.trim();
-                    var tokens = input.split(/[ ,]+/).filter(Boolean);
-                    
-                    if( tokens.length==0 ) {
-                        return null;
-                    }
-                    
-                    if( this.currentState == Wilderland.Client.GameState.IN_SPACE ) {
-                        this.processInSpaceCommands(input, tokens);
-                    } else if( this.currentState == Wilderland.Client.GameState.IN_PORT ) {
-                        this.processInPortCommands(input, tokens);
+                    this.inputQueue.get("inputs").push(event.input);
+                    console.log("Wilderland.Client: input queued");
+                    this.inputQueue.trigger("enqueue");
+                },
+                
+                processNextInput : function() {
+                    console.log("processing next input");
+                    if( this.currentCommand==null && this.inputQueue.get("inputs").length>0 ) {
+                        var input = this.inputQueue.get("inputs").splice(0,1)[0].trim();
+                        var tokens = this.tokenize(input);
+                        
+                        if( this.currentState == Wilderland.Client.GameState.IN_SPACE ) {
+                            this.processInSpaceCommands(input, tokens);
+                        }
                     }
                 },
                 
-                processInPortCommands : function(input, tokens) {
-                    // Input: <l|leave|launch>
-                    // Launch/Leave from port
-                    if( tokens.length>0 && 
-                        (tokens[0].toLowerCase()=="l" || tokens[0].toLowerCase()=="leave")
-                    ) {
-                        this.queueCommand({
-                            command : "launch"
-                        });
-                    }
+                tokenize : function(input) {
+                    return input.split(/[ ,]+/).filter(Boolean);
+                },
+                
+                displayMessage : function(message) {
+                   this.trigger("event_message", message);
                 },
                 
                 processInSpaceCommands : function(input, tokens) {
+                    var self=this;
+                    
                     // Input: <int>
                     // Move
                     if( tokens.length==1 && parseInt(tokens[0])==tokens[0] ) {
@@ -149,6 +207,7 @@
                                 "destination" : tokens[0]
                             }
                         });
+                        return;
                     }
                     
                     // Input: (move|m) <int>
@@ -163,6 +222,7 @@
                                 "destination" : tokens[1]
                             }
                         });
+                        return;
                     }
                     
                     // Input: (p|port);
@@ -173,7 +233,26 @@
                         this.queueCommand({
                             command : "port"
                         });
+                        return;
                     }
+                    
+                    // Input: (s|scan)
+                    // Scan the sector
+                    if( tokens.length==1 &&
+                        (tokens[0].toLowerCase()=="s" || tokens[0].toLowerCase()=="scan")
+                    ) {
+                        this.displayMessage("Scanning...");
+                        this.queueCommand({
+                            command : "scan",
+                            args : {},
+                            callback : function(sector) {
+                                self.displaySector(sector);
+                            }
+                        });
+                        return;
+                    }
+                    
+                    this.displayMessage("Unknown command");
                 },
                 
                 queueCommand : function(command) {
@@ -188,20 +267,33 @@
                         commands : commands
                     });
                     
-                    console.log("Wilderland.Client: Command " + command.id + " queued");
+                    //console.log("Wilderland.Client: Command " + command.id + " queued");
                     
-                    this.commandQueue.trigger("enqueue");
-                },
-                
-                onCommandQueued : function() {
+                    //this.commandQueue.trigger("enqueue");
+                    
                     this.processNextCommand();
                 },
                 
+                onCommandQueued : function() {
+                    //this.processNextCommand();
+                },
+                
+                onInputQueued : function() {
+                    //this.processNextInput();
+                },
+                
                 processNextCommand : function() {
-                    if( this.currentCommand==null && this.commandQueue.get("commands").length>0 ) {
+                    if( this.currentCommand!=null ) return;
+                    
+                    if( this.commandQueue.get("commands").length>0 ) {
                         var commands = this.commandQueue.get("commands");
-                        this.currentCommand = commands.splice(0,1)[0];
-                        this.sendCommand(this.currentCommand);
+                        var command = commands.splice(0,1)[0];
+                        this.sendCommand(command);
+                    } else if( this.inputQueue.get("inputs").length>0 ) {
+                        this.processNextInput();
+                    } else {
+                        console.log("Wilderland.Client: No more inputs, waiting");
+                        this.listenToOnce(this.inputQueue, "enqueue", this.processNextInput, this);
                     }
                 },
                 
@@ -218,7 +310,9 @@
                 onCommandFail : function(data) {
                     if( data.id==this.currentCommand.id ) {
                         console.log("Wilderland.Client: Command " + this.currentCommand.id + " fail");
-                        //console.log(data);
+                        if( data.message ) {
+                            this.displayMessage(data.message);
+                        }
                         this.currentCommand = null;
                         this.processNextCommand();
                     }  
@@ -226,9 +320,12 @@
                 
                 sendCommand : function(command) {
                     console.log("Wilderland.Client: Sending command '" + command.command +"'");
-                    //console.log(command);
                     this.currentCommand = command;
-                    this.socket.emit(command.command, command);
+                    if( command.callback ) {
+                        this.socket.emit(command.command, command, command.callback);
+                    } else {
+                        this.socket.emit(command.command, command);
+                    }
                 }
            })
        } 

@@ -14,6 +14,18 @@ var Ship = function(options) {
     
     this.holds = values.holds;
     this.cargo = values.cargo;
+    
+    this.getFuelOre = function() {
+        return this.cargo.FuelOre;
+    };
+    
+    this.getOrganics = function() {
+        return this.cargo.Organics;
+    };
+    
+    this.getEquipment = function() {
+        return this.cargo.Equipment;
+    }
 }
 
 module.exports = Ship;

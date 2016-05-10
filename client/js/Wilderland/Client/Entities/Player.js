@@ -5,11 +5,10 @@
                 "Entities" : {
                     "Player" : function(params) {
                         this.credits = 0;
-                        this.ship = {
-                                
-                        };
                         
                         $.extend(true, this, params);
+                        
+                        this.ship = new Wilderland.Client.Entities.Ship(params.ship);
                         
                         this.getCredits = function() {
                             return this.credits;
@@ -21,10 +20,6 @@
                         
                         this.addCredits = function(credits) {
                             this.credits += parseInt(credits);
-                        }
-                        
-                        this.getEmptyCargoHolds = function() {
-                            return 1;
                         }
                     }
                 }

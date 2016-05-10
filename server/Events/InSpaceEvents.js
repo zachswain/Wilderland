@@ -6,7 +6,7 @@ var InSpaceEvents = function(client) {
     
     this.handlers = {
         "move" : onMove.bind(this),
-        "port" : onPort.bind(this)
+        "scan" : onScan.bind(this)
     }
 }
 
@@ -62,57 +62,26 @@ function onMove(data) {
     }
 }
 
-function onPort(data) {
+function onScan(data, fn) {
     if( this.client.state!=GameState.IN_SPACE ) {
         this.client.socket.emit("command_fail", {
             id : data.id,
             message : "You can't do that right now."
         });
     } else {
-        var sector = this.client.universe.getSector(this.client.player.location.id);
+        console.log("scanning");
+        console.log(data);
+        var currentSector = this.client.universe.getSector(this.client.player.location.id);
         
-        if( sector ) {
-            if( sector.ports.length > 0 ) {
-                var port = this.client.universe.getPort(sector.ports[0]);
-                if( port ) {
-                    this.client.setState(GameState.LEAVING_SECTOR);
-                    this.client.setState(GameState.ENTERING_PORT, {
-                        "port" : port.buildForClient()   
-                    });
-                    
-                    this.client.player.setLocation({
-                        type : Type.PORT,
-                        id : port.getId()
-                    })
-                    
-                    this.client.setState(GameState.IN_PORT, {
-                        "port" : port.buildForClient(),
-                        "player" : this.client.player.buildForClient(this.client)
-                    });
-                    
-                    this.client.socket.emit("command_success", {
-                        id : data.id
-                    });
-                } else {
-                   this.client.socket.emit("command_fail", {
-                        id : data.id,
-                        message : "Bad sector data"
-                    }); 
-                }
-            } else {
-                this.client.socket.emit("command_fail", {
-                    id : data.id,
-                    message : "Bad sector data"
-                });
-            }
-                
-        } else {
-            this.client.socket.emit("command_fail", {
-                id : data.id,
-                message : "Bad sector data"
-            });   
+        if( fn ) {
+            fn(currentSector);
         }
+        
+        this.client.socket.emit("command_success", {
+            id : data.id
+        });
     }
 }
+
 
 module.exports = InSpaceEvents;

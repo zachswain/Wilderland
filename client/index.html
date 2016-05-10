@@ -69,7 +69,7 @@
           </tbody>
         </table>
         
-        You have <%= player.getCredits() %> credits and <%= player.getEmptyCargoHolds() %> empty holds.
+        You have <%= player.getCredits() %> credits and <%= player.ship.getEmptyCargoHolds() %> empty holds.
       </div>
     </script>
     
@@ -88,6 +88,7 @@
     <script src="/js/Wilderland/Client/Entities/Player.js"></script>
     <script src="/js/Wilderland/Client/Entities/Sector.js"></script>
     <script src="/js/Wilderland/Client/Entities/Port.js"></script>
+    <script src="/js/Wilderland/Client/Entities/Ship.js"></script>
     
     <script>
       $(document).ready(function() {
