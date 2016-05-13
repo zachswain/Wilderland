@@ -6,7 +6,9 @@ var InPortEvents = function(client) {
     
     this.handlers = {
         "port" : onPort.bind(this),
-        "launch" : onLaunch.bind(this)
+        "launch" : onLaunch.bind(this),
+        "buyCommodity" : onBuyCommodity.bind(this),
+        "sellCommodity" : onSellCommodity.bind(this)
     };
     
     this.leavePort = leavePort.bind(this);
@@ -147,6 +149,19 @@ function onLaunch(data) {
     } else {
         // let something else handle launch
     }
+}
+
+function onBuyCommodity(data) {
+}
+
+function onSellCommodity(data, fn) {
+    console.log(data);
+    if( fn ) {
+        fn({});
+    }
+    this.client.socket.emit("command_success", {
+        id : data.id,
+    });
 }
 
 module.exports = InPortEvents;

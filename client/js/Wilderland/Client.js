@@ -115,30 +115,133 @@
                 },
                 
                 sellingOre : function(data) {
-                    var self = this;
-                    console.log("selling ore");
-                    console.log(data);
-                    var defaultAmount = (data.player.ship.cargo.FuelOre < data.port.inventory.FuelOre.current) ? data.player.ship.cargo.FuelOre : data.port.inventory.FuelOre.current;
-                    
-                    this.displayMessage("How much Fuel Ore do you want to sell? [" + defaultAmount + "]");
-                    
-                    this.onInput(function(input) {
-                        var amount;
-                        if( input=="" ) {
-                            amount = defaultAmount;
-                        } else {
-                            amount = parseInt(input);
-                        }
+                    var port = new Wilderland.Client.Entities.Port(data.port);
+                    if( port.isBuyingFuelOre() ) {
+                        var self = this;
+                        console.log("selling ore");
+                        console.log(data);
+                        var defaultAmount = (data.player.ship.cargo.FuelOre < data.port.inventory.FuelOre.current) ? data.player.ship.cargo.FuelOre : data.port.inventory.FuelOre.current;
                         
-                        if( amount==0 ) {
-                            self.sellingOrganics();
-                        } else if( amount<=defaultAmount ) {
-                            self.displayMessage("Great, " + amount + " ore it is.");
+                        this.displayMessage("How much Fuel Ore do you want to sell? [" + defaultAmount + "]");
+                        
+                        this.onInput(function(input) {
+                            var amount;
+                            if( input=="" ) {
+                                amount = defaultAmount;
+                            } else {
+                                amount = parseInt(input);
+                            }
+                            
+                            if( amount==0 ) {
+                                setTimeout(function() {
+                                    self.sellingOrganics(data);
+                                }, 0);
+                            } else if( amount<=defaultAmount && amount>0 ) {
+                                self.displayMessage("Great, " + amount + " ore it is.");
+                                self.haggleWithPlayerSelling({
+                                    offer : amount * 2,
+                                    ideal : amount * 2.2,
+                                    isSelling : false,
+                                    success : function(result) {
+                                        self.displayMessage("Thanks!");
+                                        setTimeout(function() {
+                                            self.sellingOrganics(data);
+                                        },0);
+                                    },
+                                    failure : function() {
+                                        
+                                    }
+                                });
+                            } else {
+                                self.displayMessage("Didn't quite catch that.");
+                                setTimeout(function() {
+                                    self.sellingOre(data);    
+                                }, 0);
+                            }
+                        });
+                    } else {
+                        setTimeout(function() {
+                            self.sellingOrganics(data);
+                        }, 0);
+                    }
+                },
+                
+                sellingOrganics : function(data) {
+                    var self = this;
+                    var port = new Wilderland.Client.Entities.Port(data.port);
+                    if( port.isBuyingOrganics() ) {
+                        console.log("selling organics");
+                        console.log(data);
+                        var defaultAmount = (data.player.ship.cargo.Organics < data.port.inventory.Organics.current) ? data.player.ship.cargo.Organics : data.port.inventory.Organics.current;
+                        
+                        this.displayMessage("How many Organics do you want to sell? [" + defaultAmount + "]");
+                        
+                        this.onInput(function(input) {
+                            var amount;
+                            if( input=="" ) {
+                                amount = defaultAmount;
+                            } else {
+                                amount = parseInt(input);
+                            }
+                            
+                            if( amount==0 ) {
+                                setTimeout(function() {
+                                    self.sellingEquipment();    
+                                }, 0);
+                            } else if( amount<=defaultAmount && amount>0 ) {
+                                self.displayMessage("Great, " + amount + " ore it is.");
+                                self.haggleWithPlayerSelling({
+                                    playerIsSelling : true,
+                                    success : function(result) {
+                                        console.log("Selling " + amount + " ore for " + result.price + " credits");
+                                        self.displayMessage("Thanks!");
+                                        setTimeout(function() {
+                                            self.sellingEquipment(data);
+                                        },0);
+                                    },
+                                    failure : function() {
+                                        
+                                    }
+                                });
+                            } else {
+                                self.displayMessage("Didn't quite catch that.");
+                                setTimeout(function() {
+                                    self.sellingEquipment(data);
+                                }, 0);
+                            }
+                        });
+                    } else {
+                        console.log("not selling organics");
+                        setTimeout(function() {
+                            self.sellingEquipment(data);
+                        }, 0);
+                    }
+                },
+                
+                /* Port wants to buy low */
+                haggleWithPlayerSelling : function(parameters) {
+                    console.log("haggling");
+                    var self=this;
+                    self.displayMessage("How about " + parameters.offer + "?");
+                    self.onInput(function(input) {
+                        if( input=="" ) {
+                            self.queueCommand({
+                                command : "sellCommodity",
+                                args : {
+                                },
+                                callback : function(result) {
+                                    console.log("haggling callback");
+                                    parameters.success({});
+                                }
+                            });
                         } else {
-                            self.displayMessage("Didn't quite catch that.");
-                            self.sellingOre(data);
+                            var amount = parseInt(input);
                         }
                     });
+                },
+                
+                sellingEquipment : function(data) {
+                    console.log("selling equipment");
                 },
                 
                 onInput : function(fn) {
@@ -253,6 +356,7 @@
                     }
                     
                     this.displayMessage("Unknown command");
+                    this.processNextCommand();
                 },
                 
                 queueCommand : function(command) {
